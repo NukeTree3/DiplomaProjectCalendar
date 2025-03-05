@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Активация аккаунта</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<p th:text="'Привет, ' + ${userName} + '!'"></p>
+<p>Пожалуйста, перейдите по ссылке ниже, чтобы активировать свой аккаунт:</p>
+<a th:href="${activationLink}" th:text="${activationLink}"></a>
+<p>Спасибо!</p>
+</body>
+</html>
