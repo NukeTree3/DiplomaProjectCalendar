@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +24,7 @@ public interface NoteRepositories extends JpaRepository<Note, Integer> {
     @Transactional
     @Query(value = "UPDATE date_note SET text_note = :new_text WHERE id = :id", nativeQuery = true)
     void changeNoteText(@Param("id") int id, @Param("new_text") String newText);
+
+    @Query(value = "SELECT * FROM date_note WHERE date = :date AND author_username IN :usernames", nativeQuery = true)
+    ArrayList<Optional<Note>> getNodeByDateAndUsernames(@Param("date") LocalDate date, @Param("usernames") List<String> username);
 }

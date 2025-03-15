@@ -17,7 +17,7 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/main", "/registration-page").permitAll()
+                        .requestMatchers("/", "/registration", "/activationcode/*").permitAll()
                         .requestMatchers("/calendar/**", "/profile").fullyAuthenticated()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()).formLogin(form -> form.loginPage("/login").permitAll())

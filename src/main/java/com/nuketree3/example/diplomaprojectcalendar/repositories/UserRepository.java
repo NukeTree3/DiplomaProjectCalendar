@@ -2,6 +2,7 @@ package com.nuketree3.example.diplomaprojectcalendar.repositories;
 
 import com.nuketree3.example.diplomaprojectcalendar.domain.User;
 import jakarta.transaction.Transactional;
+//import com.vladmihalcea.hibernate.type.array.StringArrayType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,8 +14,12 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
-    Optional<User> findByUsername(String username);
-    Optional<User> findByEmail(String email);
+
+    @Query(value = "SELECT * FROM users WHERE username = :username", nativeQuery = true)
+    Optional<User> findByUsername(@Param("username") String username);
+
+    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+    Optional<User> findByEmail(@Param("email") String email);
 
     @Modifying
     @Transactional
@@ -48,25 +53,64 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     ArrayList<User> findByUsernameIn(ArrayList<String> usernames);
 
-    @Query(value = "SELECT user_friends FROM user_friends WHERE id = :id", nativeQuery = true)
-    ArrayList<String> getUserFriends(@Param("id") Long id);
+    @Query(value = "SELECT user_friends FROM user_friends WHERE id = (SELECT id FROM users WHERE username = :username)", nativeQuery = true)
+    String[] getUserFriends(@Param("username") String username);
 
-    Long getUserUIIDByUsername(String username);
+
+    @Query(value = "SELECT COALESCE(friend_offers, '{}') FROM user_friends WHERE id = (SELECT id FROM users WHERE username = :username) ", nativeQuery = true)
+    String[] getUserFriendsOffers(@Param("username") String username);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_friends SET user_friends = array_append(user_friends, :friend) WHERE id = (SELECT id FROM users WHERE username = :username)", nativeQuery = true)
+    void addUserFriends(@Param("username") String username, @Param("friend") String friend);
+
+    @Query(value = "SELECT COALESCE(send_offer, '{}') FROM user_friends WHERE id = (SELECT id FROM users WHERE username = :username)", nativeQuery = true)
+    String[] getSendOffer(@Param("username") String username);
+
+    @Query(value = "SELECT id FROM users WHERE username = :username", nativeQuery = true)
+    Long getUserIDByUsername(@Param("username") String username);
 
     Long getUserIDByEmail(String username);
 
     @Query(value = "SELECT username FROM users WHERE email = :email", nativeQuery = true)
     String getUsernameByEmail(@Param("email") String email);
 
-//    @Query(value = "SELECT photourl FROM users_photo WHERE user_id = (SELECT id FROM users WHERE username = :username)", nativeQuery = true)
-//    String getUserPhotoUrlByUsername(@Param("username") String username);
-//
-//    @Query(value = "SELECT user_friends FROM user_friends WHERE id = (SELECT id FROM users WHERE username = :username)", nativeQuery = true)
-//    ArrayList<String> getUserFriendsByUsername(String username);
+    @Query(value = "SELECT photourl FROM users_photo WHERE user_id = (SELECT id FROM users WHERE username = :username)", nativeQuery = true)
+    String getUserPhotoUrlByUsername(@Param("username") String username);
 
-    @Query(value = "SELECT photourl FROM users_photo WHERE user_id = :id", nativeQuery = true)
-    String getUserPhotoUrlByUserId(@Param("id") Long userId);
+    @Query(value = "SELECT username FROM users WHERE lower(username) LIKE lower(concat('%', :queryName, '%')) AND NOT username = :username", nativeQuery = true)
+    ArrayList<String> getUsersLike(@Param("queryName") String queryName, @Param("username") String username);
 
-    @Query(value = "SELECT username FROM users WHERE username LIKE :username", nativeQuery = true)
-    ArrayList<String> getUsersLike(@Param("username") String username);
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_friends SET send_offer = array_append(send_offer, :sendOffer) WHERE id = :id", nativeQuery = true)
+    void addSendOffer(@Param("id") Long id, @Param("sendOffer") String sendOffer);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_friends SET friend_offers = array_append(friend_offers, :userFriendOffer) WHERE id = (SELECT id FROM users WHERE username = :name)", nativeQuery = true)
+    void addFriendOffer(@Param("name") String name, @Param("userFriendOffer") String userFriendOffer);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_friends SET send_offer = array_remove(send_offer, :sendOffer) WHERE id = (SELECT id FROM users WHERE username = :name)", nativeQuery = true)
+    void delSendOffer(@Param("name") String name, @Param("sendOffer") String sendOffer);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_friends SET friend_offers = array_remove(friend_offers, :userFriendOffer) WHERE id = (SELECT id FROM users WHERE username = :name)", nativeQuery = true)
+    void delFriendOffer(@Param("name") String name, @Param("userFriendOffer") String userFriendOffer);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE users_photo SET photourl = :photourl WHERE user_id = (SELECT id FROM users WHERE username = :username)", nativeQuery = true)
+    void setUserPhotoUrl(@Param("username") String name, @Param("photourl") String photoUrl);
+
+    User getUserById(Long id);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_friends SET user_friends = array_remove(user_friends, :friend) WHERE id = (SELECT id FROM users WHERE username = :name)", nativeQuery = true)
+    void delFriend(@Param("name") String user, @Param("friend") String friend);
 }
