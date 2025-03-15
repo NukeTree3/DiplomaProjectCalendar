@@ -1,6 +1,5 @@
 package com.nuketree3.example.diplomaprojectcalendar.domain;
 
-import jakarta.annotation.sql.DataSourceDefinition;
 import lombok.Data;
 
 import java.time.LocalDate;
